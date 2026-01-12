@@ -139,20 +139,25 @@ phoneInput.addEventListener('keydown', (e) => {
     }
 });
 
-// Phone Number Formatter
+// Phone Number Formatter - supports up to 15 digits
 phoneInput.addEventListener('input', (e) => {
     let value = e.target.value.replace(/\D/g, '');
-    let formatted = '';
 
-    // Format: XX XXX XXXX (for most countries)
-    if (value.length > 0) {
-        formatted = value.substring(0, 2);
+    // Limit to 15 digits (max international phone length)
+    if (value.length > 15) {
+        value = value.substring(0, 15);
     }
-    if (value.length > 2) {
-        formatted += ' ' + value.substring(2, 5);
-    }
-    if (value.length > 5) {
-        formatted += ' ' + value.substring(5, 9);
+
+    // Smart formatting based on length
+    let formatted = '';
+    if (value.length <= 3) {
+        formatted = value;
+    } else if (value.length <= 6) {
+        formatted = value.substring(0, 3) + ' ' + value.substring(3);
+    } else if (value.length <= 10) {
+        formatted = value.substring(0, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6);
+    } else {
+        formatted = value.substring(0, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6, 10) + ' ' + value.substring(10);
     }
 
     e.target.value = formatted;

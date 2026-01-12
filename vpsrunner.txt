@@ -1,0 +1,10 @@
+# Перезапуск сервисов
+sudo systemctl restart telegram-app
+sudo systemctl restart telegram-bot
+# Логи
+sudo journalctl -u telegram-app -f
+sudo journalctl -u telegram-bot -f
+# Обновление кода
+cd ~/telegram-fast-api
+git pull
+sudo systemctl restart telegram-app telegram-bot
