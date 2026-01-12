@@ -355,3 +355,31 @@ h1 {
 .success-icon svg {
     margin-top: 20px;
 }
+
+/* QR Code */
+.qr-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    margin: 24px 0;
+}
+
+.qr-container img {
+    border-radius: 12px;
+    max-width: 200px;
+}
+
+.qr-loading {
+    color: #8e8e8e;
+    font-size: 14px;
+}
+
+.qr-expired {
+    color: #f44336;
+    text-align: center;
+}
+
+.qr-expired button {
+    margin-top: 12px;
+}

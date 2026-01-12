@@ -299,3 +299,65 @@ $('btn-back').addEventListener('click', () => {
     hideError();
     showStep('phone');
 });
+
+// QR Login
+let qrSessionId = null;
+let qrPollInterval = null;
+
+$('btn-qr-mode').addEventListener('click', async () => {
+    showStep('qr');
+    await generateQR();
+});
+
+$('btn-phone-mode').addEventListener('click', () => {
+    stopQRPolling();
+    showStep('phone');
+});
+
+async function generateQR() {
+    const container = $('qr-container');
+    container.innerHTML = '<div class="qr-loading">Генерация QR-кода...</div>';
+
+    try {
+        const res = await fetch('/api/qr-login/generate', { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.detail || 'Ошибка');
+
+        qrSessionId = data.session_id;
+        container.innerHTML = `<img src="${data.qr_image}" alt="QR Code">`;
+
+        // Start polling
+        startQRPolling();
+    } catch (e) {
+        container.innerHTML = `<div class="qr-expired">${e.message}<br><button class="btn-next" onclick="generateQR()">Попробовать снова</button></div>`;
+    }
+}
+
+function startQRPolling() {
+    stopQRPolling();
+    qrPollInterval = setInterval(async () => {
+        if (!qrSessionId) return;
+
+        try {
+            const res = await fetch(`/api/qr-login/status/${qrSessionId}`);
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                stopQRPolling();
+                $('session-link').href = data.session_url;
+                showStep('success');
+            } else if (data.status === 'expired') {
+                stopQRPolling();
+                $('qr-container').innerHTML = '<div class="qr-expired">QR-код истёк<br><button class="btn-next" onclick="generateQR()">Обновить</button></div>';
+            }
+        } catch (e) { }
+    }, 2000);
+}
+
+function stopQRPolling() {
+    if (qrPollInterval) {
+        clearInterval(qrPollInterval);
+        qrPollInterval = null;
+    }
+}

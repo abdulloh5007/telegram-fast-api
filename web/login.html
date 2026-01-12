@@ -57,6 +57,27 @@
             </label>
 
             <button class="btn-next" id="btn-phone">ДАЛЕЕ</button>
+            <button class="btn-link" id="btn-qr-mode">Войти через QR-код</button>
+        </div>
+
+        <!-- QR Step -->
+        <div class="step" id="step-qr">
+            <div class="logo">
+                <svg viewBox="0 0 64 64" width="100" height="100">
+                    <circle cx="32" cy="32" r="32" fill="#54a9eb" />
+                    <path
+                        d="M45.5 18.5l-27 10.5c-1.8.7-1.8 1.7-.3 2.1l6.9 2.2 2.6 8c.3 1 .2 1.4 1.1 1.4.7 0 1-.3 1.4-.7l3.4-3.3 7 5.2c1.3.7 2.2.3 2.5-1.2l4.5-21.3c.5-1.9-.7-2.8-2.1-2.2zm-3.5 5.8l-14.5 13.2c-.2.2-.3.5-.3.8l-.8 4.5c0 .3-.4.4-.5.1l-2.3-7.5c-.1-.4.1-.8.4-.9l17.4-10.8c.4-.3.8.2.5.6z"
+                        fill="white" />
+                </svg>
+            </div>
+            <h1>Войти через QR</h1>
+            <p class="subtitle">Отсканируйте QR-код в приложении Telegram на телефоне</p>
+
+            <div class="qr-container" id="qr-container">
+                <div class="qr-loading">Генерация QR-кода...</div>
+            </div>
+
+            <button class="btn-link" id="btn-phone-mode">Войти по номеру телефона</button>
         </div>
 
         <!-- Code Step -->
