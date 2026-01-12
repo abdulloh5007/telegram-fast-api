@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Chat Viewer</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+
+<body>
+    <div id="session-screen" class="screen active">
+        <div class="session-container">
+            <div class="logo">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
+                </svg>
+            </div>
+            <h1>Telegram Chat Viewer</h1>
+            <p class="subtitle">Выберите сессию</p>
+            <div id="sessions-list" class="sessions-list">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-screen" class="screen">
+        <header class="header">
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">?</div>
+                <div class="user-details">
+                    <span class="user-name" id="user-name">Loading...</span>
+                    <span class="user-username" id="user-username"></span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="btn-settings" title="Настройки">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+                    </svg>
+                </button>
+                <button class="btn-logout" id="btn-logout">Выйти</button>
+            </div>
+        </header>
+
+        <div class="main-container">
+            <aside class="sidebar">
+                <div class="search-box">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Поиск...">
+                </div>
+                <div class="dialogs-list" id="dialogs-list">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </aside>
+
+            <main class="chat-area">
+                <div class="chat-placeholder">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" opacity="0.3">
+                        <path
+                            d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
+                    </svg>
+                    <p>Выберите чат</p>
+                </div>
+                <div class="chat-header" id="chat-header" style="display: none;">
+                    <button class="btn-back" id="btn-back">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                        </svg>
+                    </button>
+                    <div class="chat-avatar" id="chat-avatar">?</div>
+                    <div class="chat-info">
+                        <span class="chat-name" id="chat-name"></span>
+                        <span class="chat-status" id="chat-status"></span>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button class="search-toggle" id="search-toggle" title="Поиск">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="search-bar" id="search-bar">
+                    <input type="text" id="search-input-chat" placeholder="Поиск по чату...">
+                    <span class="search-results" id="search-results"></span>
+                    <div class="search-nav">
+                        <button id="search-prev" title="Предыдущий">↑</button>
+                        <button id="search-next" title="Следующий">↓</button>
+                    </div>
+                    <button class="search-close" id="search-close">×</button>
+                </div>
+                <div class="messages-container" id="messages-container" style="display: none;">
+                    <div class="messages-list" id="messages-list"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Сохранение данных</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label>Режим сохранения</label>
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="local" id="mode-local">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                            </svg>
+                            Локальный файл
+                        </button>
+                        <button class="mode-btn" data-mode="cloud" id="mode-cloud">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+                            </svg>
+                            Supabase
+                        </button>
+                    </div>
+                </div>
+
+                <div class="setting-group" id="password-group">
+                    <label>Пароль для шифрования</label>
+                    <input type="password" id="backup-password" placeholder="Минимум 4 символа" class="input-field">
+                </div>
+
+                <div class="setting-group">
+                    <label>Сообщений за чат: <span id="msg-limit-value">50</span></label>
+                    <input type="range" id="msg-limit" min="10" max="200" value="50" class="slider">
+                </div>
+
+                <div class="setting-group">
+                    <label>Выберите чаты</label>
+                    <div class="chat-selector" id="chat-selector">
+                        <div class="loading">Загрузка чатов...</div>
+                    </div>
+                    <div class="selector-actions">
+                        <button class="btn-link" id="select-all">Выбрать все</button>
+                        <button class="btn-link" id="deselect-all">Снять все</button>
+                    </div>
+                </div>
+
+                <div id="backup-warning" class="backup-warning" style="display: none;">
+                    ⚠️ У вас уже есть сохранённые данные в Supabase
+                    <button class="btn-danger btn-small" id="btn-delete-old">Удалить старые</button>
+                </div>
+
+                <div id="backup-status" class="backup-status"></div>
+                <div id="backup-log" class="backup-log" style="display: none;"></div>
+
+                <div class="modal-footer">
+                    <button class="btn-primary btn-large" id="btn-backup">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="session-expired-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Сессия истекла</h2>
+            </div>
+            <div class="modal-body">
+                <p>Ваша Telegram сессия была завершена.</p>
+                <div class="modal-actions">
+                    <button class="btn-primary" id="btn-view-saved">Посмотреть сохранённые</button>
+                    <button class="btn-secondary" id="btn-new-login">Войти заново</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/static/js/app.js"></script>
+</body>
+
+</html>

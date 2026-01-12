@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Читатель - Telegram Chat Viewer</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/reader.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="reader-container">
+        <header class="reader-header">
+            <h1><i data-lucide="folder-open"></i> Telegram Backup Reader</h1>
+            <p>Загрузите зашифрованный файл для просмотра</p>
+        </header>
+
+        <div id="upload-section" class="upload-section">
+            <div id="drop-zone" class="drop-zone">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+                </svg>
+                <p>Перетащите файл сюда</p>
+                <span>или</span>
+                <label class="file-input-label">
+                    Выберите файл
+                    <input type="file" id="file-input" accept=".enc" hidden>
+                </label>
+            </div>
+
+            <div id="file-info" class="file-info" style="display: none;">
+                <i data-lucide="file" class="file-icon"></i>
+                <span id="file-name" class="file-name">filename.enc</span>
+                <button id="btn-remove-file" class="btn-remove"><i data-lucide="x"></i> Удалить</button>
+            </div>
+
+            <div id="password-section" class="password-section" style="display: none;">
+                <input type="password" id="decrypt-password" placeholder="Введите пароль" class="input-field">
+                <button class="btn-primary" id="btn-decrypt">Расшифровать</button>
+            </div>
+
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+        </div>
+
+        <div id="viewer-section" class="viewer-section" style="display: none;">
+            <div class="viewer-sidebar">
+                <div class="viewer-user" id="viewer-user"></div>
+                <div class="viewer-dialogs" id="viewer-dialogs"></div>
+            </div>
+            <div class="viewer-chat">
+                <div class="viewer-chat-header" id="viewer-chat-header">
+                    <span id="chat-title">Выберите чат</span>
+                    <div class="search-container" style="display: none;" id="search-container">
+                        <input type="text" id="search-input" placeholder="Поиск..." class="search-input">
+                        <span id="search-count"></span>
+                        <button id="search-prev"><i data-lucide="chevron-up"></i></button>
+                        <button id="search-next"><i data-lucide="chevron-down"></i></button>
+                        <button id="search-close"><i data-lucide="x"></i></button>
+                    </div>
+                    <button id="btn-search" class="btn-icon" style="display: none;"><i
+                            data-lucide="search"></i></button>
+                </div>
+                <div class="viewer-messages" id="viewer-messages">
+                    <div class="viewer-placeholder">← Выберите чат слева</div>
+                </div>
+            </div>
+        </div>
+
+        <a href="/" class="back-link"><i data-lucide="arrow-left"></i> На главную</a>
+    </div>
+
+    <script type="module" src="/static/js/reader.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+
+</html>

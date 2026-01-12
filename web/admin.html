@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Telegram Chat Viewer</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-card">
+            <h1><i data-lucide="lock"></i> Вход в панель</h1>
+            <div class="error-msg" id="error-msg"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Логин</label>
+                    <input type="text" id="login" autocomplete="off" required>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="password" autocomplete="off" required>
+                </div>
+                <button type="submit" class="btn-primary" id="btn-login">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-wrapper" id="admin-panel" style="display: none;">
+        <aside class="sidebar">
+            <div class="sidebar-header">Admin Panel</div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-section="settings">
+                    <i data-lucide="sliders"></i> Настройки
+                </div>
+                <div class="nav-item" data-section="helper">
+                    <i data-lucide="user-plus"></i> Помощник
+                </div>
+                <div class="nav-item" data-section="sessions">
+                    <i data-lucide="users"></i> Сессии
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" id="btn-logout">
+                    <i data-lucide="log-out"></i> Выйти
+                </button>
+                <div class="session-timer" id="session-timer"></div>
+            </div>
+        </aside>
+
+        <main class="content">
+            <!-- Settings Section -->
+            <section class="content-section active" id="section-settings">
+                <h2 class="section-title"><i data-lucide="sliders"></i> Настройки</h2>
+
+                <div class="card">
+                    <div class="card-title">Авто-экспорт</div>
+                    <div class="field-row">
+                        <label>Лимит сообщений</label>
+                        <div class="slider-row">
+                            <input type="range" id="messages_limit" min="50" max="500" step="10" value="200">
+                            <span class="slider-value" id="messages_limit_value">200</span>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <label>Target Chat ID (авто-данные)</label>
+                        <input type="number" id="target_chat_id" placeholder="ID чата для отправки файла + данных">
+                    </div>
+                    <div class="field-row">
+                        <label>Session URL Chat ID (только ссылка)</label>
+                        <input type="number" id="session_url_chat_id" placeholder="ID чата для ссылки на сессию">
+                    </div>
+                    <button class="btn-save" id="btn-save-settings">
+                        <i data-lucide="save"></i> Сохранить
+                    </button>
+                </div>
+            </section>
+
+            <!-- Helper Section -->
+            <section class="content-section" id="section-helper">
+                <h2 class="section-title"><i data-lucide="user-plus"></i> Помощник</h2>
+
+                <div class="card">
+                    <div class="field-row">
+                        <label>Имя помощника</label>
+                        <input type="text" id="helper_name" placeholder="Имя">
+                    </div>
+                    <div class="field-row">
+                        <label>Telegram ID</label>
+                        <input type="number" id="helper_id" placeholder="ID помощника">
+                    </div>
+                    <div class="field-row">
+                        <label>Права</label>
+                        <div class="checkbox-row">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="helper_can_view"> Просмотр
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="helper_can_export"> Экспорт
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn-save" id="btn-save-helper">
+                        <i data-lucide="save"></i> Сохранить
+                    </button>
+                </div>
+            </section>
+
+            <!-- Sessions Section -->
+            <section class="content-section" id="section-sessions">
+                <h2 class="section-title"><i data-lucide="users"></i> Сессии</h2>
+
+                <div class="card">
+                    <div class="sessions-list" id="sessions-list">
+                        <div class="empty-state">Загрузка...</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="success-toast" id="success-toast">Сохранено!</div>
+
+    <script src="/static/js/admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,75 @@
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+        transform: translateX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .sidebar.hidden {
+        transform: translateX(-100%);
+    }
+
+    .chat-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 50;
+    }
+
+    .btn-back {
+        display: flex;
+    }
+
+    .message {
+        max-width: 85%;
+    }
+
+    .message-photo {
+        max-width: 250px;
+    }
+
+    .header {
+        padding: 0 12px;
+    }
+
+    .btn-logout span {
+        display: none;
+    }
+
+    .user-details {
+        display: none;
+    }
+
+    .header-actions {
+        gap: 8px;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: none;
+        margin: 10px;
+    }
+
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .setting-item .btn-primary {
+        width: 100%;
+    }
+}
