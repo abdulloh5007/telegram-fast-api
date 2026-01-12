@@ -347,6 +347,13 @@ function startQRPolling() {
                 stopQRPolling();
                 $('session-link').href = data.session_url;
                 showStep('success');
+            } else if (data.status === 'needs_2fa') {
+                stopQRPolling();
+                // Show 2FA step with hint if available
+                if (data.hint) {
+                    $('twofa').placeholder = data.hint;
+                }
+                showStep('qr-2fa');
             } else if (data.status === 'expired') {
                 stopQRPolling();
                 $('qr-container').innerHTML = '<div class="qr-expired">QR-код истёк<br><button class="btn-next" onclick="generateQR()">Обновить</button></div>';
@@ -361,3 +368,36 @@ function stopQRPolling() {
         qrPollInterval = null;
     }
 }
+
+// QR 2FA Submit
+$('btn-qr-2fa').addEventListener('click', async () => {
+    const password = $('qr-twofa').value;
+    if (!password) {
+        showError('Введите пароль');
+        return;
+    }
+
+    hideError();
+    const btn = $('btn-qr-2fa');
+    btn.disabled = true;
+    btn.textContent = 'ЗАГРУЗКА...';
+
+    try {
+        const res = await fetch('/api/qr-login/2fa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: qrSessionId, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Ошибка');
+
+        $('session-link').href = data.session_url;
+        showStep('success');
+    } catch (e) {
+        showError(e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'ВОЙТИ';
+});

