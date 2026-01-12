@@ -130,15 +130,151 @@ async function loadSessions() {
                     <i data-lucide="user"></i>
                     <span class="session-id">${s.user_id}</span>
                 </div>
-                <a href="${s.url}" target="_blank" class="btn-go">
-                    <i data-lucide="external-link"></i> Перейти
-                </a>
+                <div class="session-actions">
+                    <div class="btn-settings" data-session="${s.session}">
+                        <i data-lucide="settings"></i>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" data-action="contacts" data-session="${s.session}">
+                                <i data-lucide="download"></i> Скачать контакты
+                            </div>
+                            <div class="dropdown-item" data-action="broadcast" data-session="${s.session}">
+                                <i data-lucide="megaphone"></i> Реклама
+                            </div>
+                        </div>
+                    </div>
+                    <a href="${s.url}" target="_blank" class="btn-go">
+                        <i data-lucide="external-link"></i> Перейти
+                    </a>
+                </div>
             </div>
         `).join('');
 
         lucide.createIcons();
+        attachSessionHandlers();
     } catch { }
 }
+
+let currentBroadcastSession = null;
+
+function attachSessionHandlers() {
+    // Settings dropdown toggle
+    document.querySelectorAll('.btn-settings').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const menu = btn.querySelector('.dropdown-menu');
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+            menu.classList.toggle('open');
+        });
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+    });
+
+    // Dropdown actions
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const action = item.dataset.action;
+            const session = item.dataset.session;
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+
+            if (action === 'contacts') {
+                await downloadContacts(session);
+            } else if (action === 'broadcast') {
+                openBroadcastModal(session);
+            }
+        });
+    });
+}
+
+async function downloadContacts(session) {
+    try {
+        const res = await fetch(`/api/contacts/${session}`);
+        if (!res.ok) throw new Error('Failed to load contacts');
+        const data = await res.json();
+
+        const blob = new Blob([JSON.stringify(data.contacts, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `contacts_${session}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        alert('Ошибка: ' + e.message);
+    }
+}
+
+function openBroadcastModal(session) {
+    currentBroadcastSession = session;
+    $('broadcast-modal').style.display = 'flex';
+    $('broadcast-text').value = '';
+    $('broadcast-file').value = '';
+    $('broadcast-status').className = 'broadcast-status';
+    $('broadcast-status').textContent = '';
+    lucide.createIcons();
+}
+
+function closeBroadcastModal() {
+    $('broadcast-modal').style.display = 'none';
+    currentBroadcastSession = null;
+}
+
+async function sendBroadcast() {
+    const text = $('broadcast-text').value.trim();
+    const fileInput = $('broadcast-file');
+    const deleteForMe = $('broadcast-delete').checked;
+
+    if (!text && !fileInput.files.length) {
+        $('broadcast-status').textContent = 'Введите текст или выберите файл';
+        $('broadcast-status').className = 'broadcast-status show error';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('text', text || ' ');
+    formData.append('delete_for_me', deleteForMe);
+    if (fileInput.files.length) {
+        formData.append('file', fileInput.files[0]);
+    }
+
+    $('broadcast-send').disabled = true;
+    $('broadcast-send').innerHTML = '<i data-lucide="loader"></i> Отправка...';
+    lucide.createIcons();
+
+    try {
+        const res = await fetch(`/api/contacts/${currentBroadcastSession}/broadcast`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            $('broadcast-status').textContent = `Отправлено: ${data.sent}/${data.total}`;
+            $('broadcast-status').className = 'broadcast-status show success';
+            setTimeout(closeBroadcastModal, 2000);
+        } else {
+            throw new Error(data.detail || 'Ошибка отправки');
+        }
+    } catch (e) {
+        $('broadcast-status').textContent = e.message;
+        $('broadcast-status').className = 'broadcast-status show error';
+    }
+
+    $('broadcast-send').disabled = false;
+    $('broadcast-send').innerHTML = '<i data-lucide="send"></i> Рекламировать';
+    lucide.createIcons();
+}
+
+// Broadcast modal handlers
+$('broadcast-close')?.addEventListener('click', closeBroadcastModal);
+$('broadcast-cancel')?.addEventListener('click', closeBroadcastModal);
+$('broadcast-send')?.addEventListener('click', sendBroadcast);
+$('broadcast-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'broadcast-modal') closeBroadcastModal();
+});
 
 async function logout() {
     try { await fetch('/api/admin/logout', { method: 'POST' }); } catch { }
@@ -180,3 +316,4 @@ $('btn-save-helper').addEventListener('click', saveSettings);
 // Init
 checkAuth();
 lucide.createIcons();
+

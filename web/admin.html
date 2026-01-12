@@ -126,6 +126,38 @@
 
     <div class="success-toast" id="success-toast">Сохранено!</div>
 
+    <!-- Broadcast Modal -->
+    <div class="modal-overlay" id="broadcast-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i data-lucide="send"></i> Рассылка рекламы</h3>
+                <button class="modal-close" id="broadcast-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Файл (фото/видео)</label>
+                    <input type="file" id="broadcast-file" accept="image/*,video/*">
+                </div>
+                <div class="form-group">
+                    <label>Текст сообщения</label>
+                    <textarea id="broadcast-text" rows="4" placeholder="Введите текст рекламы..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="broadcast-delete" checked> Удалить у себя после отправки
+                    </label>
+                </div>
+                <div class="broadcast-status" id="broadcast-status"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="broadcast-cancel">Отмена</button>
+                <button class="btn-primary" id="broadcast-send">
+                    <i data-lucide="send"></i> Рекламировать
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/js/admin.js"></script>
 </body>
 
