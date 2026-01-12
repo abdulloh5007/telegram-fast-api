@@ -357,17 +357,33 @@ h1 {
 }
 
 /* QR Code */
+.qr-wrapper {
+    position: relative;
+    display: inline-block;
+    margin: 20px 0;
+}
+
 .qr-container {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 200px;
-    margin: 24px 0;
 }
 
 .qr-container img {
-    border-radius: 12px;
-    max-width: 200px;
+    border-radius: 16px;
+    width: 220px;
+    height: 220px;
+}
+
+.qr-logo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #212121;
+    padding: 8px;
+    border-radius: 50%;
 }
 
 .qr-loading {
@@ -382,4 +398,38 @@ h1 {
 
 .qr-expired button {
     margin-top: 12px;
+}
+
+/* QR Instructions */
+.qr-instructions {
+    text-align: left;
+    margin: 24px 0;
+}
+
+.qr-instruction {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+    color: #aaa;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.qr-instruction b {
+    color: #fff;
+}
+
+.qr-step-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    background: #8774e1;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
 }
